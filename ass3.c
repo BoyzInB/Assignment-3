@@ -5,8 +5,11 @@
 //  Created by Viktor Mattsson on 2016-03-01.
 //
 //
-
+/*
 #include <stdio.h>
+
+#define n=10
+
 
 typedef struct {
     int N;
@@ -18,24 +21,32 @@ typedef struct {
 
 void SOR(GRID *grid, double *u[])
 
+void printMatrix((int*) A){
+    
+}
+
 int main{
-    int** x;
+    /*int** x;
     int* temp;
+    int dimension1_max = 1000, dimension2_max = 1000;
     
     x = malloc(dimension1_max * sizeof(int*));
     temp = malloc(dimension1_max * dimension2_max * sizeof(int));
     for (int i = 0; i < dimension1_max; i++) {
         x[i] = temp + (i * dimension2_max);
     }
+    int *A;
+    A = (int *) malloc(n*n*sizeof(int *));
     
     
     
     
     
+
     
-    
-    free(temp);
+    /*free(temp);
     free(x);
+    free(A);
     return 0;
 }
 
@@ -73,5 +84,64 @@ void SOR(GRID *grid, double *u[])
     printf("norm_residual/norm_residual0 = %g\n",
            norm_residual/norm_residual0);
     if (norm_residual > EPSILON*norm_residual0)
-        printf("WARNING: iterative method failed to converge\n");
+     printf("WARNING: iterative method failed to converge\n");
+}
+
+*/
+
+
+/**********************************************************************
+ * assignment 3
+ *
+ *
+ **********************************************************************/
+
+#include <omp.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+#define PI 3.14159265
+
+void printArray(const double *A,int n){
+    for (int i = 0; i<n; i++){
+        for(int j=0;j<n;j++)
+            printf("%.1f  ",A[i*n+j]);
+        printf("\n");
+    }
+}
+
+double sinfunc (double x, double y){
+    double res = sin(2*pi*x);
+    return res;
+}
+
+int main(int argc, char *argv[]) {
+    
+    int i,j,n = 10;
+    
+    double *A;
+    A = (double *) malloc(n*n*sizeof(double *));
+    
+    
+    for (i = 0; i<n; i++){
+        for(j=0;j<n;j++){
+            if(i == 0 || i == n-1)
+                A[i*n+j] = 0;
+            else if(j == 0 || j == n-1)
+                A[i*n+j] = 0;
+            else
+                A[i*n+j] = 1;
+        }
+    }
+    A[(3-1)*n+(4-1)] = 5;
+    
+    
+    
+    printArray(A,n);
+    
+    
+    
+    free(A);
+    return 0;
 }

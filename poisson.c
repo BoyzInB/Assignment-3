@@ -72,8 +72,8 @@ int main(void)
    
     elliptic = SOR;
     /* calculate omega_opt for SOR */
-    mu = cos(PI*h); /* Jacobi spectral radius */
-    grid.omega = 2.*(1.-sqrt(1.-sq(mu)))/sq(mu);
+    //mu = cos(PI*h); /* Jacobi spectral radius */
+    grid.omega = 1.7;
     printf("EPSILON = epsilon*h^2 = %g\n", grid.EPSILON);
     printf("\twhere epsilon = %g\n", epsilon);
     printf("SOR omega_opt = %g\n", grid.omega);

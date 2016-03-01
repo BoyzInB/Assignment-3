@@ -24,6 +24,7 @@
 #define DOUBLE		((unsigned) sizeof(double))
 #define ERROR	(-1)
 #define sq(x)	( (x)*(x) )
+#define f(x)	(sin(2*PI*x))
 #define EPSILON_M	2.2204460492503131e-16
 
 typedef struct {
@@ -40,12 +41,6 @@ void implement_BCs(GRID *grid, double *u[]);
 void print_solution(char *string, GRID *grid, double *u[]);
 void SOR(GRID *grid, double *u[]); 
 
-POINTER alloc_matrix(int N_rows, int N_columns, unsigned element_size);
-POINTER alloc_vector(int N, unsigned element_size);
-POINTER Alloc(unsigned N_bytes);
-void zero_matrix(double *A[], int N_rows, int N_columns);
-void zero_vector(double v[], int N); 
-
 int main(void)
 {
     GRID grid;
@@ -54,12 +49,13 @@ int main(void)
     double h, mu;
     /* for convergence of iterative methods, EPSILON = epsilon*h^2 */
     double epsilon = 1.e-5;
-    int N,i; 
-    void *elliptic;
+    int N,i;  
     char c[100]; 
     
     N = 10;
-    printf("number of dx = number of dy = %d\n", N);
+    printf("number of dx = number of dy = %d\n", N); 
+    
+    //Define our grid-dimensions
     grid.N = N;
     grid.dx = (xmax-xmin)/N;
     grid.dy = (ymax-ymin)/N;
@@ -69,29 +65,22 @@ int main(void)
     grid.ymin = ymin;
     grid.ymax = ymax;
     grid.EPSILON = epsilon*sq(h);
-   
-    elliptic = SOR;
-    /* calculate omega_opt for SOR */
-    mu = cos(PI*h); /* Jacobi spectral radius */
-    grid.omega = 2.*(1.-sqrt(1.-sq(mu)))/sq(mu);
-    printf("EPSILON = epsilon*h^2 = %g\n", grid.EPSILON);
-    printf("\twhere epsilon = %g\n", epsilon);
-    printf("SOR omega_opt = %g\n", grid.omega);
+     
+    grid.omega = 1.7;
     
     /* allocate memory for array u */
-	double **u = calloc((N+1),sizeof(*u));
-	double *arr = calloc((N+1)*(N+1), sizeof*arr); 
+    double **u = calloc((N+1),sizeof(*u));
+    double *arr = calloc((N+1)*(N+1), sizeof*arr); 
 	
-	for (i = 0; i < (N+1); ++i)
-	{
-	    u[i] = &arr[i * (N+1)];
-	}
+    for (i = 0; i < (N+1); ++i){
+	u[i] = &arr[i * (N+1)];
+    }
     
     implement_BCs(&grid, u);
     SOR(&grid, u);
     print_solution("solution", &grid, u);  
     	
-    free(arr);	
+    free(arr);		
     free(u); 
     return 0;
 }
@@ -99,10 +88,11 @@ int main(void)
 void implement_BCs(GRID *grid, double *u[])
 {
     int N = grid->N, i, j;
+    double h = 1/N;
     
     for (j = 0; j <= N; j++) {
-        u[j][0] = 0.;
-        u[j][N] = 1.;
+        u[j][0] = 0;
+        u[j][N] = f(j*h);
     }
     for (i = 1; i < N; i++) {
         u[0][i] = 0.;
@@ -125,6 +115,8 @@ void print_solution(char *string, GRID *grid, double *u[])
      
 }
 
+
+//Method för att performa SORen
 void SOR(GRID *grid, double *u[])
 {
     int N = grid->N, i, j, sweep;

@@ -110,6 +110,19 @@ void implement_BCs(GRID *grid, double *u[])
     }
 }
 
+void impBC (double *A,int n){//Function that implements the boundary conditions
+    int i;
+    for (i=1; i<n ; i++) {
+        A[i*n] = A[i*n+1]; //Column 0
+        A[i*n+(n-1)] = A[i*n+(n-2)]; //Column n
+        A[i] = A[n+i]; //Row 0
+        A[(n-1)*n+i] = A[(n-2)*n+i]; //Row n
+    }
+    A[0] = A[1]; A[n-1]=A[n-2]; //Corner Points
+    A[(n-1)*n] = A[(n-2)*n]; A[n*n-1]= A[n*n-2];
+}
+
+
 void print_solution(char *string, GRID *grid, double *u[])
 {
     int N = grid->N, i, j;
@@ -127,6 +140,7 @@ void print_solution(char *string, GRID *grid, double *u[])
 
 void SOR(GRID *grid, double *u[])
 {
+    Grid newGrid = grid;
     int N = grid->N, i, j, sweep;
     double dx = grid->dx;
     double dy = grid->dy;
@@ -163,6 +177,9 @@ void SOR(GRID *grid, double *u[])
                                    + (u[j][i+1] - 2*u[j][i] + u[j][i-1])/(dy*dy));
             }
         }
+
+        print_solution("residual", &newGrid, residual);
+
         
         //Step 5: compute it's L2norm
         sum = 0;

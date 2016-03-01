@@ -80,7 +80,7 @@ int main(void)
     
     /* allocate memory for array u */
 	double **u = calloc((N+1),sizeof(*u));
-	double *arr = calloc((N+1)*(N+1), sizeof(double)); 
+	double *arr = calloc((N+1)*(N+1), sizeof*arr); 
 	
 	for (i = 0; i < (N+1); ++i)
 	{
@@ -90,6 +90,9 @@ int main(void)
     implement_BCs(&grid, u);
     SOR(&grid, u);
     print_solution("solution", &grid, u);  
+    	
+    free(arr);	
+    free(u); 
     return 0;
 }
 

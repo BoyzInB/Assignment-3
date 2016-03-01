@@ -80,7 +80,7 @@ int main(void)
     
     /* allocate memory for array u */
 	double **u = calloc((N+1),sizeof(*u));
-	double *arr = calloc((N+1)*(N+1), sizeof(double)); 
+	double *arr = calloc((N+1)*(N+1), sizeof*arr); 
 	
 	for (i = 0; i < (N+1); ++i)
 	{
@@ -89,7 +89,12 @@ int main(void)
     
     implement_BCs(&grid, u);
     SOR(&grid, u);
-    print_solution("solution", &grid, u);  
+    print_solution("solution", &grid, u); 
+  
+    for(i=0;i<2;i++)
+    	free(arr);
+    	
+    free(u); 
     return 0;
 }
 
@@ -115,7 +120,7 @@ void print_solution(char *string, GRID *grid, double *u[])
     // x, y, u
     for (i = 0; i <= N; i++) {
         for (j = 0; j <= N; j++) {
-            printf("%.2f", u[j][i]);
+            printf("%.2f ", u[j][i]);
         }
         printf("\n");
     }

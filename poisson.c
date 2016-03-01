@@ -110,6 +110,19 @@ void implement_BCs(GRID *grid, double *u[])
     }
 }
 
+void impBC (double *A,int n){//Function that implements the boundary conditions
+    int i; 
+    for (i=1; i<n ; i++) {
+        A[i*n] = A[i*n+1]; //Column 0
+        A[i*n+(n-1)] = A[i*n+(n-2)]; //Column n
+        A[i] = A[n+i]; //Row 0
+        A[(n-1)*n+i] = A[(n-2)*n]; //Row n
+    }
+    A[0] = A[1]; A[n-1]=A[n-2]; //Corner Points
+    A[(n-1)*n] = A[(n-2)*n]; A[n*n-1]= A[n*n-2];
+}
+
+
 void print_solution(char *string, GRID *grid, double *u[])
 {
     int N = grid->N, i, j;

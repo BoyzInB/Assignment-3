@@ -128,36 +128,54 @@ void print_solution(char *string, GRID *grid, double *u[])
 void SOR(GRID *grid, double *u[])
 {
     int N = grid->N, i, j, sweep;
+    double dx = grid->dx;
+    double dy = grid->dy;
     double EPSILON = grid->EPSILON;
     double omega = grid->omega;
-    double sum, residual, norm_residual0, norm_residual = 1.;
+    double sum, temp, norm_residual0, norm_residual = 1.;
     
-    sum = 0;
-    for (i = 1; i < N; i++) {
-        for (j = 1; j < N; j++) {
-            residual = (-4.*u[j][i]+u[j+1][i]+u[j-1][i]+
-                        u[j][i+1]+u[j][i-1]);
-            sum += fabs(residual);
-        }
+    
+    double **residual = calloc((N+1),sizeof(*residual));
+    double *arr = calloc((N+1)*(N+1), sizeof*arr);
+    
+    for (i = 0; i < (N+1); ++i)
+    {
+        residual[i] = &arr[i * (N+1)];
     }
-    norm_residual0 = sum/sq(N-1);
     
-    for (sweep = 0; sweep<MAX_SWEEPS &&
-         norm_residual>EPSILON*norm_residual0; sweep++) {
+    while(norm_residual > EPSILON){
+        //Step 1: enforce BC
+        
+        //Step 2: compute new u
+        for (i = 1; i < N; i++) {
+            for (j = 1; j < N; j++) {
+                u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
+                ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
+                 (u[j][i+1]+u[j][i-1])/(dy*dy) );
+            }
+        }
+        //Step 3: enforce BC
+        
+        //Step 4: compute the residual
+        for (i = 1; i < N; i++) {
+            for (j = 1; j < N; j++) {
+                residual[j][i] = -((u[j+1][i] - 2*u[j][i] + u[j-1][i])/(dx*dx)
+                                   + (u[j][i+1] - 2*u[j][i] + u[j][i-1])/(dy*dy));
+            }
+        }
+        
+        //Step 5: compute it's L2norm
         sum = 0;
         for (i = 1; i < N; i++) {
             for (j = 1; j < N; j++) {
-                residual = (-4.*u[j][i]+u[j+1][i]+u[j-1][i]+
-                            u[j][i+1]+u[j][i-1]);
-                sum += fabs(residual);
-                u[j][i] += omega*residual/4.;
+                sum += residual[j][i]*residual[j][i];
             }
         }
-        norm_residual = sum/sq(N-1);
+        norm_residual = sqrt(1/(N*N)*sum);
+        
+        printf("%f\n",norm_residual);
     }
-    printf("number of sweeps = %d\n", sweep);
-    printf("norm_residual/norm_residual0 = %g\n",
-           norm_residual/norm_residual0);
-    if (norm_residual > EPSILON*norm_residual0)
-        printf("WARNING: iterative method failed to converge\n");
+    printf("sor done ...\n");
+    
+    
 }

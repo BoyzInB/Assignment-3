@@ -99,6 +99,7 @@ void SOR(GRID *grid, double *u[])
 #include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <math.h>
 
 #define PI 3.14159265
@@ -106,7 +107,7 @@ void SOR(GRID *grid, double *u[])
 void printArray(const double *A,int n){
     for (int i = 0; i<n; i++){
         for(int j=0;j<n;j++)
-            printf("%.1f  ",A[i*n+j]);
+            printf("%.3f  ",A[i*n+j]);
         printf("\n");
     }
 }
@@ -122,7 +123,7 @@ void impBC (double *A,int n){//Function that implements the boundary conditions
         A[i*n] = A[i*n+1]; //Column 0
         A[i*n+(n-1)] = A[i*n+(n-2)]; //Column n
         A[i] = A[n+i]; //Row 0
-        A[(n-1)*n+i] = A[(n-2)*n]; //Row n
+        A[(n-1)*n+i] = A[(n-2)*n+i]; //Row n
     }
     A[0] = A[1]; A[n-1]=A[n-2]; //Corner Points
     A[(n-1)*n] = A[(n-2)*n]; A[n*n-1]= A[n*n-2];
@@ -132,6 +133,7 @@ void impBC (double *A,int n){//Function that implements the boundary conditions
 int main(int argc, char *argv[]) {
     
     int i,j,n = 10;
+    srand(time(NULL));
     
     double *A;
     A = (double *) malloc(n*n*sizeof(double *));
@@ -144,7 +146,7 @@ int main(int argc, char *argv[]) {
             else if(j == 0 || j == n-1)
                 A[i*n+j] = 0;
             else
-                A[i*n+j] = 1;
+                A[i*n+j] = 1.0*rand()/RAND_MAX;;
         }
     }
     A[(3-1)*n+(4-1)] = 5;

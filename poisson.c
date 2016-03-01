@@ -151,13 +151,15 @@ void implement_BCs(GRID *grid, double *u[])
     int N = grid->N, i, j;
     
     for (j = 0; j <= N; j++) {
-        u[j][0] = 0.;
-        u[j][N] = 1.;
+        u[j][0] = u[j][1];
+        u[j][N] = u[j][N-1];
     }
     for (i = 1; i < N; i++) {
-        u[0][i] = 0.;
-        u[N][i] = 0.;
+        u[0][i] = u[1][i];
+        u[N][i] = u[N-1][i];
     }
+    u[0][0] = u[1][0];u[N][0]=u[N-1][0];
+    u[0][N] = u[1][N];u[N][N]=u[N][N-1];
 }
 
 void print_solution(char *string, GRID *grid, double *u[])

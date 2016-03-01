@@ -104,31 +104,6 @@ void SOR(GRID *grid, double *u[])
 
 #define PI 3.14159265
 
-void printArray(const double *A,int n){
-    for (int i = 0; i<n; i++){
-        for(int j=0;j<n;j++)
-            printf("%.3f  ",A[i*n+j]);
-        printf("\n");
-    }
-}
-
-double sinfunc (double x, double y){
-    double res = sin(2*PI*x);
-    return res;
-}
-
-void impBC (double *A,int n){//Function that implements the boundary conditions
-    int i;
-    for (i=1; i<n ; i++) {
-        A[i*n] = A[i*n+1]; //Column 0
-        A[i*n+(n-1)] = A[i*n+(n-2)]; //Column n
-        A[i] = A[n+i]; //Row 0
-        A[(n-1)*n+i] = A[(n-2)*n+i]; //Row n
-    }
-    A[0] = A[1]; A[n-1]=A[n-2]; //Corner Points
-    A[(n-1)*n] = A[(n-2)*n]; A[n*n-1]= A[n*n-2];
-}
-
 
 int main(int argc, char *argv[]) {
     
@@ -163,4 +138,55 @@ int main(int argc, char *argv[]) {
     
     free(A);
     return 0;
+}
+
+
+void printArray(const double *A,int n){
+    for (int i = 0; i<n; i++){
+        for(int j=0;j<n;j++)
+            printf("%.3f  ",A[i*n+j]);
+        printf("\n");
+    }
+}
+
+double sinfunc (double x, double y){
+    double res = sin(2*PI*x);
+    return res;
+}
+
+void impBC (double *A,int n){//Function that implements the boundary conditions
+    int i;
+    for (i=1; i<n ; i++) {
+        A[i*n] = A[i*n+1]; //Column 0
+        A[i*n+(n-1)] = A[i*n+(n-2)]; //Column n
+        A[i] = A[n+i]; //Row 0
+        A[(n-1)*n+i] = A[(n-2)*n+i]; //Row n
+    }
+    A[0] = A[1]; A[n-1]=A[n-2]; //Corner Points
+    A[(n-1)*n] = A[(n-2)*n]; A[n*n-1]= A[n*n-2];
+}
+
+void implement_BCs(GRID *grid, double *u[])
+{
+    int N = grid->N, i, j;
+    
+    for (j = 0; j <= N; j++) {
+        u[j][0] = u[j][1];
+        u[j][N] = u[j][N-1];
+    }
+    for (i = 1; i < N; i++) {
+        u[0][i] = u[1][i];
+        u[N][i] = u[N-1][i];
+    }
+    u[0][0] = u[1][0];u[N][0]=u[N-1][0];
+    u[0][N] = u[1][N];u[N][N]=u[N][N-1];
+}
+
+void SOR(double *A){
+    int i,j;
+    for (i=1; i<n; i++) {
+        for (j=1; j<n; j++) {
+            
+        }
+    }
 }

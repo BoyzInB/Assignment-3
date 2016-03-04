@@ -174,7 +174,7 @@ void implement_BCs(GRID *grid, double *u[])
         u[j][0] = u[j][1];
         u[j][N] = u[j][N-1];
     }
-    for (i = 1; i < N; i++) {
+    for (i = 1; i <= N; i++) {
         u[0][i] = u[1][i];
         u[N][i] = u[N-1][i];
     }

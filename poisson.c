@@ -38,7 +38,7 @@ typedef void	*POINTER;
 
 void implement_BCs(GRID *grid, double *u[]);
 void print_solution(char *string, GRID *grid, double *u[]);
-void SOR(GRID *grid, double *u[]);
+void SOR(GRID *grid, double *u[], double *f[]);
 void fill(GRID *grid, double *u[]);
 void fillFunc(GRID *grid, double *u[]);
 double sinfunc (double x, double y);
@@ -52,7 +52,7 @@ void zero_vector(double v[], int N);
 int main(void)
 {
     GRID grid;
-    double xmin = 0., xmax = 1.;
+    double xmin = 0., xmax = 1.; //Unit square
     double ymin = 0., ymax = 1.;
     double h, mu;
     /* for convergence of iterative methods, EPSILON = epsilon*h^2 */
@@ -83,36 +83,32 @@ int main(void)
     
     /* allocate memory for array u */
     double **u = calloc((N+1),sizeof(*u));
-    double *arr = calloc((N+1)*(N+1), sizeof*arr);
+    double **f = calloc((N+1),sizeof(*f));
+    double *arr1 = calloc((N+1)*(N+1), sizeof*arr1);
+    double *arr2 = calloc((N+1)*(N+1), sizeof*arr2);
     
     for (i = 0; i < (N+1); ++i)
     {
-        u[i] = &arr[i * (N+1)];
+        u[i] = &arr1[i * (N+1)];
+        f[i] = &arr2[i * (N+1)];
     }
-    fillFunc(&grid,u);
-    print_solution("solution", &grid, u);
-    implement_BCs(&grid, u);
-    SOR(&grid, u);
+    fillFunc(&grid,f);
+    /*print_solution("solution", &grid, f);
+    printf("\n");
+    f[1][1]=4.;
+    implement_BCs(&grid, f);
+    print_solution("solution", &grid, f);*/
+    //print_solution("solution", &grid, u);
+    //implement_BCs(&grid, u);
+    SOR(&grid, u,f);
     print_solution("solution", &grid, u);
     
-    free(arr);
+    free(arr1);
+    free(arr2);
+    free(f);
     free(u);
     return 0;
 }
-
-/*void implement_BCs(GRID *grid, double *u[])
- {
- int N = grid->N, i, j;
- 
- for (j = 0; j <= N; j++) {
- u[j][0] = 0.;
- u[j][N] = 1.;
- }
- for (i = 1; i < N; i++) {
- u[0][i] = 0.;
- u[N][i] = 0.;
- }
- }*/
 
 void fill(GRID *grid, double *u[]){
     int N = grid->N,i,j;
@@ -125,8 +121,8 @@ void fill(GRID *grid, double *u[]){
 void fillFunc(GRID *grid, double *u[]){
     int N = grid->N,i,j;
     double dx = grid->dx, dy=grid->dy;
-    for (i=0;i<N;i++)
-        for (j=0;j<N; j++)
+    for (i=0;i<=N;i++)
+        for (j=0;j<=N; j++)
             u[i][j] = sinfunc(dx*i,dy*j);
 }
 
@@ -155,7 +151,7 @@ void print_solution(char *string, GRID *grid, double *u[])
     // x, y, u
     for (i = 0; i <= N; i++) {
         for (j = 0; j <= N; j++) {
-            printf("%.2f ", u[j][i]);
+            printf("%.4f ", u[j][i]);
         }
         printf("\n");
     }
@@ -167,7 +163,7 @@ double sinfunc (double x, double y){
     return res;
 }
 
-void SOR(GRID *grid, double *u[])
+void SOR(GRID *grid, double *u[], double *f[])
 {
     int N = grid->N, i, j, sweep;
     double dx = grid->dx;
@@ -185,23 +181,27 @@ void SOR(GRID *grid, double *u[])
         residual[i] = &arr[i * (N+1)];
     }
     
-    while(norm_residual > EPSILON){
+    while(norm_residual > EPSILON && count < 3000000){
         //Step 1: enforce BC
+        
         implement_BCs(grid,u);
+        
         //Step 2: compute new u
         for (i = 1; i < N; i++) {
             for (j = 1; j < N; j++) {
                 u[i][j] =(1-omega)*u[i][j] + omega/(2/(dx*dx)+2/(dy*dy))*
                 ( (u[i+1][j]+u[i-1][j])/(dx*dx)+
-                 (u[i][j+1]+u[i][j-1])/(dy*dy) );
+                 (u[i][j+1]+u[i][j-1])/(dy*dy)-f[i][j] );
             }
         }
         //Step 3: enforce BC
+        
         implement_BCs(grid,u);
+        
         //Step 4: compute the residual
         for (i = 1; i < N; i++) {
             for (j = 1; j < N; j++) {
-                residual[i][j] = -((u[i+1][j] - 2*u[i][j] + u[i-1][j])/(dx*dx)
+                residual[i][j] = f[i][j]-((u[i+1][j] - 2*u[i][j] + u[i-1][j])/(dx*dx)
                                    + (u[i][j+1] - 2*u[i][j] + u[i][j-1])/(dy*dy));
             }
         }

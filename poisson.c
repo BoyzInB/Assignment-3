@@ -2,7 +2,7 @@
  *				solvers: main.c
  *
  *	This program solves Laplace's equation on the unit square in
- *	finite-difference form using Jacobi, Gauss-Seidel, or SOR iteration,
+ *	finite-difference form SOR iteration,
  *	or a full-matrix or banded-matrix direct solve.
  *
  *	The BCs are Dirichlet with u(B) = 0 except u(x = 1, y) = 1.
@@ -48,7 +48,7 @@ void zero_vector(double v[], int N);
 
 int main(void)
 {
-    GRID grid;
+     GRID grid;
     double xmin = 0., xmax = 1.;
     double ymin = 0., ymax = 1.;
     double h, mu;
@@ -96,7 +96,7 @@ int main(void)
     return 0;
 }
 
-void implement_BCs(GRID *grid, double *u[])
+/*void implement_BCs(GRID *grid, double *u[])
 {
     int N = grid->N, i, j;
     
@@ -108,18 +108,22 @@ void implement_BCs(GRID *grid, double *u[])
         u[0][i] = 0.;
         u[N][i] = 0.;
     }
-}
+}*/
 
-void impBC (double *A,int n){//Function that implements the boundary conditions
-    int i;
-    for (i=1; i<n ; i++) {
-        A[i*n] = A[i*n+1]; //Column 0
-        A[i*n+(n-1)] = A[i*n+(n-2)]; //Column n
-        A[i] = A[n+i]; //Row 0
-        A[(n-1)*n+i] = A[(n-2)*n+i]; //Row n
+void implement_BCs(GRID *grid, double *u[])
+{
+    int N = grid->N, i, j;
+    
+    for (j = 0; j <= N; j++) {
+        u[j][0] = u[j][1];
+        u[j][N] = u[j][N-1];
     }
-    A[0] = A[1]; A[n-1]=A[n-2]; //Corner Points
-    A[(n-1)*n] = A[(n-2)*n]; A[n*n-1]= A[n*n-2];
+    for (i = 1; i <= N; i++) {
+        u[0][i] = u[1][i];
+        u[N][i] = u[N-1][i];
+    }
+    u[0][0] = u[1][0];u[N][0]=u[N-1][0];
+    u[0][N] = u[1][N];u[N][N]=u[N][N-1];
 }
 
 
@@ -140,7 +144,6 @@ void print_solution(char *string, GRID *grid, double *u[])
 
 void SOR(GRID *grid, double *u[])
 {
-    Grid newGrid = grid;
     int N = grid->N, i, j, sweep;
     double dx = grid->dx;
     double dy = grid->dy;
@@ -159,26 +162,27 @@ void SOR(GRID *grid, double *u[])
     
     while(norm_residual > EPSILON){
         //Step 1: enforce BC
-        
+        //implement_BCs(grid,u);
         //Step 2: compute new u
         for (i = 1; i < N; i++) {
             for (j = 1; j < N; j++) {
-                u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
-                ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
-                 (u[j][i+1]+u[j][i-1])/(dy*dy) );
+                u[i][j] =(1-omega)*u[i][j] + omega/(2/(dx*dx)+2/(dy*dy))*
+                ( (u[i+1][j]+u[i-1][j])/(dx*dx)+
+                 (u[i][j+1]+u[i][j-1])/(dy*dy) );
             }
         }
         //Step 3: enforce BC
-        
+        //implement_BCs(grid,u);
         //Step 4: compute the residual
         for (i = 1; i < N; i++) {
             for (j = 1; j < N; j++) {
-                residual[j][i] = -((u[j+1][i] - 2*u[j][i] + u[j-1][i])/(dx*dx)
-                                   + (u[j][i+1] - 2*u[j][i] + u[j][i-1])/(dy*dy));
+                residual[i][j] = -((u[i+1][j] - 2*u[i][j] + u[i-1][j])/(dx*dx)
+                                   + (u[i][j+1] - 2*u[i][j] + u[i][j-1])/(dy*dy));
             }
         }
 
-        print_solution("residual", &newGrid, residual);
+        //print_solution("residual", grid, residual);
+
 
         
         //Step 5: compute it's L2norm

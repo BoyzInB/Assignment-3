@@ -38,7 +38,12 @@ typedef void	*POINTER;
 
 void implement_BCs(GRID *grid, double *u[]);
 void print_solution(char *string, GRID *grid, double *u[]);
-void SOR(GRID *grid, double *u[]);
+void SOR(GRID *grid, double *u[], double *f[]);
+void fill(GRID *grid, double *u[]);
+double sinfunc (double x, double y);
+void fillF(GRID *grid, double *f[]);
+
+
 
 POINTER alloc_matrix(int N_rows, int N_columns, unsigned element_size);
 POINTER alloc_vector(int N, unsigned element_size);
@@ -80,19 +85,29 @@ int main(void)
     
     /* allocate memory for array u */
     double **u = calloc((N+1),sizeof(*u));
-    double *arr = calloc((N+1)*(N+1), sizeof*arr);
+    double *arr1 = calloc((N+1)*(N+1), sizeof*arr1);
+    double **f = calloc((N+1),sizeof(*f));
+    double *arr2 = calloc((N+1)*(N+1), sizeof*arr2);
+
     
     for (i = 0; i < (N+1); ++i)
     {
-        u[i] = &arr[i * (N+1)];
+        u[i] = &arr1[i * (N+1)];
+        f[i] = &arr2[i * (N+1)];
     }
     
-    implement_BCs(&grid, u);
-    SOR(&grid, u);
+    fillF(&grid,f);
+    
+    //print_solution("f",&grid,f);
+    //fill(&grid, u);
+//    implement_BCs(&grid, u);
+    SOR(&grid, u,f);
     print_solution("solution", &grid, u);
     
-    free(arr);
+    free(arr1);
+    free(arr2);
     free(u);
+    free(f);
     return 0;
 }
 
@@ -109,6 +124,32 @@ int main(void)
         u[N][i] = 0.;
     }
 }*/
+
+double sinfunc (double x, double y){
+    double res = sin(2*PI*x);
+    return res;
+}
+
+void fillF(GRID *grid, double *f[]){
+    double dx = grid->dx;
+    double dy = grid->dy;
+    int N = grid->N;
+    
+    for (int i = 0; i<N; i++){
+        for(int j = 0;j<N;j++){
+            f[i][j] = sinfunc(dx*i,dy*j);
+        }
+    }
+}
+
+
+void fill(GRID *grid, double *u[]){
+    int N = grid->N,i,j;
+    
+    for (i=N/2-1;i<N/2+2;i++)
+        for (j=N/2-1;j<N/2+2; j++)
+            u[i][j] = 10.;
+}
 
 void implement_BCs(GRID *grid, double *u[])
 {
@@ -142,7 +183,7 @@ void print_solution(char *string, GRID *grid, double *u[])
     
 }
 
-void SOR(GRID *grid, double *u[])
+void SOR(GRID *grid, double *u[], double *f[])
 {
     int N = grid->N, i, j, sweep;
     double dx = grid->dx;
@@ -159,31 +200,28 @@ void SOR(GRID *grid, double *u[])
         residual[i] = &arr[i * (N+1)];
     }
     
-    printf("\nsolution\n");
-    print_solution("solution", grid, u);
-    printf("\ngrid\n");
-    print_solution("residual", grid, residual);
-    printf("\n");
-
+  
+    int count = 0;
 
     
     while(norm_residual > EPSILON){
+        count++;
         //Step 1: enforce BC
-        //implement_BCs(grid,u);
+        implement_BCs(grid,u);
         //Step 2: compute new u
         for (i = 1; i < N; i++) {
             for (j = 1; j < N; j++) {
                 u[i][j] =(1-omega)*u[i][j] + omega/(2/(dx*dx)+2/(dy*dy))*
                 ( (u[i+1][j]+u[i-1][j])/(dx*dx)+
-                 (u[i][j+1]+u[i][j-1])/(dy*dy) );
+                 (u[i][j+1]+u[i][j-1])/(dy*dy) -f[i][j]);
             }
         }
         //Step 3: enforce BC
-        //implement_BCs(grid,u);
+        implement_BCs(grid,u);
         //Step 4: compute the residual
         for (i = 1; i < N; i++) {
             for (j = 1; j < N; j++) {
-                residual[i][j] = -((u[i+1][j] - 2*u[i][j] + u[i-1][j])/(dx*dx)
+                residual[i][j] = f[i][j]-((u[i+1][j] - 2*u[i][j] + u[i-1][j])/(dx*dx)
                                    + (u[i][j+1] - 2*u[i][j] + u[i][j-1])/(dy*dy));
             }
         }
@@ -192,16 +230,19 @@ void SOR(GRID *grid, double *u[])
 
         
         //Step 5: compute it's L2norm
-        sum = 0;
-        for (i = 1; i < N; i++) {
-            for (j = 1; j < N; j++) {
+        sum = 0.0;
+        for (i = 0; i < N+1; i++) {
+            for (j = 0; j < N+1; j++) {
                 sum += residual[j][i]*residual[j][i];
             }
         }
-        norm_residual = sqrt(1/(N*N)*sum);
+        norm_residual = sqrt(1.0/((double)N*(double)N)*sum);
+        printf("norm_res: %f\n", norm_residual);
         
-        printf("%f\n",norm_residual);
+        //print_solution("solution", grid, u);
+        
     }
+    printf("count: %d\n", count);
     printf("sor done ...\n");
     
     

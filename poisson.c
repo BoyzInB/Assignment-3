@@ -40,7 +40,6 @@ void implement_BCs(GRID *grid, double *u[]);
 void print_solution(char *string, GRID *grid, double *u[]);
 void SOR(GRID *grid, double *u[], double *f[]);
 void fill(GRID *grid, double *u[]);
-double sinfunc (double x, double y);
 void fillF(GRID *grid, double *f[]);
 
 
@@ -98,7 +97,7 @@ int main(void)
     
     fillF(&grid,f);
     
-    //print_solution("f",&grid,f);
+    print_solution("f",&grid,f);
     //fill(&grid, u);
 //    implement_BCs(&grid, u);
     SOR(&grid, u,f);
@@ -125,21 +124,15 @@ int main(void)
     }
 }*/
 
-double sinfunc (double x, double y){
-    double res = sin(2*PI*x);
-    return res;
-}
 
 void fillF(GRID *grid, double *f[]){
     double dx = grid->dx;
     double dy = grid->dy;
     int N = grid->N;
     
-    for (int i = 0; i<N; i++){
-        for(int j = 0;j<N;j++){
-            f[i][j] = sinfunc(dx*i,dy*j);
-        }
-    }
+    for (int i = 0; i<N+1; i++)
+        for(int j = 0;j<N+1;j++)
+            f[i][j] = sin(2*PI*(double)i*dx);
 }
 
 
@@ -174,8 +167,8 @@ void print_solution(char *string, GRID *grid, double *u[])
     double x, y;
     
     // x, y, u
-    for (i = 0; i <= N; i++) {
-        for (j = 0; j <= N; j++) {
+    for (i = 0; i < N + 1; i++) {
+        for (j = 0; j < N +1 ; j++) {
             printf("%.2f ", u[j][i]);
         }
         printf("\n");
@@ -193,11 +186,11 @@ void SOR(GRID *grid, double *u[], double *f[])
     double sum, temp, norm_residual0, norm_residual = 1.;
     
     double **residual = calloc((N+1),sizeof(*residual));
-    double *arr = calloc((N+1)*(N+1), sizeof*arr);
+    double *arr3 = calloc((N+1)*(N+1), sizeof*arr3);
     
     for (i = 0; i < (N+1); ++i)
     {
-        residual[i] = &arr[i * (N+1)];
+        residual[i] = &arr3[i * (N+1)];
     }
     
   
@@ -231,13 +224,16 @@ void SOR(GRID *grid, double *u[], double *f[])
         
         //Step 5: compute it's L2norm
         sum = 0.0;
-        for (i = 0; i < N+1; i++) {
-            for (j = 0; j < N+1; j++) {
+        for (i = 1; i < N; i++) {
+            for (j = 1; j < N; j++) {
                 sum += residual[j][i]*residual[j][i];
             }
         }
         norm_residual = sqrt(1.0/((double)N*(double)N)*sum);
-        printf("norm_res: %f\n", norm_residual);
+        if(count > 10000){
+            break;
+            printf("count %d\n", count);
+        }
         
         //print_solution("solution", grid, u);
         

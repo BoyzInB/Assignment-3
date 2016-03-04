@@ -151,7 +151,6 @@ void SOR(GRID *grid, double *u[])
     double omega = grid->omega;
     double sum, temp, norm_residual0, norm_residual = 1.;
     
-    
     double **residual = calloc((N+1),sizeof(*residual));
     double *arr = calloc((N+1)*(N+1), sizeof*arr);
     
@@ -159,6 +158,14 @@ void SOR(GRID *grid, double *u[])
     {
         residual[i] = &arr[i * (N+1)];
     }
+    
+    printf("\nsolution\n");
+    print_solution("solution", grid, u);
+    printf("\ngrid\n");
+    print_solution("residual", grid, residual);
+    printf("\n");
+
+
     
     while(norm_residual > EPSILON){
         //Step 1: enforce BC
@@ -181,7 +188,6 @@ void SOR(GRID *grid, double *u[])
             }
         }
 
-        //print_solution("residual", grid, residual);
 
 
         

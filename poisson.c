@@ -1,26 +1,11 @@
-/*
- *				solvers: main.c
- *
- *	This program solves Laplace's equation on the unit square in
- *	finite-difference form SOR iteration,
- *	or a full-matrix or banded-matrix direct solve.
- *
- *	The BCs are Dirichlet with u(B) = 0 except u(x = 1, y) = 1.
- *
- *	In u(x_i,y_j) = u_ij = u[j][i], x[i] runs from xmin to xmax & y[j] runs
- *	from ymin to ymax:
- *		x = xmin + i*dx;
- *		y = ymin + j*dy;
- */
 
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <omp.h>
 
-#define MAX_SWEEPS	1000000
-
-#define PI	3.142
+#define PI	3.14159265459
 #define DOUBLE		((unsigned) sizeof(double))
 #define ERROR	(-1)
 #define sq(x)	( (x)*(x) )
@@ -43,19 +28,12 @@ void fill(GRID *grid, double *u[]);
 void fillFunc(GRID *grid, double *u[]);
 double sinfunc (double x, double y);
 
-POINTER alloc_matrix(int N_rows, int N_columns, unsigned element_size);
-POINTER alloc_vector(int N, unsigned element_size);
-POINTER Alloc(unsigned N_bytes);
-void zero_matrix(double *A[], int N_rows, int N_columns);
-void zero_vector(double v[], int N);
-
 int main(void)
 {
     GRID grid;
     double xmin = 0., xmax = 1.; //Unit square
     double ymin = 0., ymax = 1.;
     double h, mu;
-    /* for convergence of iterative methods, EPSILON = epsilon*h^2 */
     double epsilon = 1.e-5;
     int N,i;
     void *elliptic;
@@ -74,14 +52,12 @@ int main(void)
     grid.EPSILON = epsilon*sq(h);
     
     elliptic = SOR;
-    /* calculate omega_opt for SOR */
-    //mu = cos(PI*h); /* Jacobi spectral radius */
     grid.omega = 1.7;
     printf("EPSILON = epsilon*h^2 = %g\n", grid.EPSILON);
     printf("\twhere epsilon = %g\n", epsilon);
     printf("SOR omega_opt = %g\n", grid.omega);
     
-    /* allocate memory for array u */
+    /* allocate memory for array u and f*/
     double **u = calloc((N+1),sizeof(*u));
     double **f = calloc((N+1),sizeof(*f));
     double *arr1 = calloc((N+1)*(N+1), sizeof*arr1);
@@ -92,12 +68,19 @@ int main(void)
         u[i] = &arr1[i * (N+1)];
         f[i] = &arr2[i * (N+1)];
     }
+
     fillFunc(&grid,f);
+    
+    //---BC Test---
     /*print_solution("solution", &grid, f);
     printf("\n");
     f[1][1]=4.;
+    f[N-1][1] = 2.;
+    f[N-1][5] = 5.;
+    f[N-4][1] = 3.;
     implement_BCs(&grid, f);
     print_solution("solution", &grid, f);*/
+    
     //print_solution("solution", &grid, u);
     //implement_BCs(&grid, u);
     SOR(&grid, u,f);
@@ -181,7 +164,7 @@ void SOR(GRID *grid, double *u[], double *f[])
         residual[i] = &arr[i * (N+1)];
     }
     
-    while(norm_residual > EPSILON && count < 3000000){
+    while(norm_residual > EPSILON && count < 300000){
         //Step 1: enforce BC
         
         implement_BCs(grid,u);
@@ -208,8 +191,6 @@ void SOR(GRID *grid, double *u[], double *f[])
         
         //print_solution("residual", grid, residual);
         
-        
-        
         //Step 5: compute it's L2norm
         sum = 0;
         for (i = 1; i < N; i++) {
@@ -217,12 +198,12 @@ void SOR(GRID *grid, double *u[], double *f[])
                 sum += residual[j][i]*residual[j][i];
             }
         }
-        printf("%.7f\n",sum);
+        //printf("%.7f\n",sum);
         norm_residual = sqrt(1.0/((double)N*(double)N)*sum);
         
-        printf("%.7f\n",norm_residual);
+        //printf("%.7f\n",norm_residual);
         count++;
-        printf("Count: %d\n",count);
+        //printf("Count: %d\n",count);
     }
     printf("sor done ...\n");
     

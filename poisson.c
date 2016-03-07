@@ -2,6 +2,8 @@
  with openmp
  */
 
+/*hai, so much code, such pretty */
+
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>

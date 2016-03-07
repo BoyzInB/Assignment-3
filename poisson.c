@@ -165,82 +165,89 @@ void SOR(GRID *grid, double *u[], double *f[])
     }
     
     
-    int count = 0;
+    int count;
     
-    
-    while(count < 10000 && norm_residual > EPSILON){
-        count++;
-        //Step 1: enforce BC
-        implement_BCs(grid,u);
-        //Step 2: compute new u
-        
-        //Red
-        for (i = 1; i < N-1; i+=2) {
-            for (j = 1; j < N-1; j+=2) {
-                u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
-                ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
-                 (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
+#pragma omp parallel private(i,j,count)
+    {
+        count = 0;
+
+        while(count < 10000 && norm_residual > EPSILON){
+            count++;
+            //Step 1: enforce BC
+            #pragma omp single
+            implement_BCs(grid,u);
+            //Step 2: compute new u
+            
+            //Red
+#pragma omp parallel for
+            for (i = 1; i < N-1; i+=2) {
+                for (j = 1; j < N-1; j+=2) {
+                    u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
+                    ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
+                     (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
+                }
             }
-        }
-        
-        
-        for (i = 2; i < N-1; i+=2) {
-            for (j = 2; j < N-1; j+=2) {
-                u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
-                ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
-                 (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
+            
+#pragma omp parallel for
+            for (i = 2; i < N-1; i+=2) {
+                for (j = 2; j < N-1; j+=2) {
+                    u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
+                    ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
+                     (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
+                }
             }
-        }
-        
-        //Black
-        for (i = 1; i < N-1; i+=2) {
-            for (j = 2; j < N-1; j+=2) {
-                u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
-                ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
-                 (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
+            //Black
+#pragma omp parallel for
+            for (i = 1; i < N-1; i+=2) {
+                for (j = 2; j < N-1; j+=2) {
+                    u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
+                    ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
+                     (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
+                }
             }
-        }
-        
-        
-        for (i = 2; i < N-1; i+=2) {
-            for (j = 1; j < N-1; j+=2) {
-                u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
-                ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
-                 (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
-            }
-        }
-        
-        
-        
-        
-        
-        
-        
-        //Step 3: enforce BC
-        implement_BCs(grid,u);
-        //Step 4: compute the residual
-        {
-            for (i = 1; i < N-1; i++) {
-                for (j = 1; j < N-1; j++) {
-                    residual[j][i] = f[j][i]-((u[j+1][i] - 2*u[j][i] + u[j-1][i])/(dx*dx)
-                                              + (u[j][i+1] - 2*u[j][i] + u[j][i-1])/(dy*dy));
+            
+#pragma omp parallel for
+            for (i = 2; i < N-1; i+=2) {
+                for (j = 1; j < N-1; j+=2) {
+                    u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
+                    ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
+                     (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
                 }
             }
             
             
-            //Step 5: compute it's L2norm
-            sum = 0.0;
-            for (i = 1; i < N-1; i++) {
-                for (j = 1; j < N-1; j++) {
-                    sum += residual[j][i]*residual[j][i];
+            
+            
+            
+            
+            
+            //Step 3: enforce BC
+            #pragma omp single
+            implement_BCs(grid,u);
+            //Step 4: compute the residual
+#pragma omp parallel for
+                for (i = 1; i < N-1; i++) {
+                    for (j = 1; j < N-1; j++) {
+                        residual[j][i] = f[j][i]-((u[j+1][i] - 2*u[j][i] + u[j-1][i])/(dx*dx)
+                                                  + (u[j][i+1] - 2*u[j][i] + u[j][i-1])/(dy*dy));
+                    }
                 }
-            }
+                
+                
+                //Step 5: compute it's L2norm
+                sum = 0.0;
+                for (i = 1; i < N-1; i++) {
+                    for (j = 1; j < N-1; j++) {
+                        sum += residual[j][i]*residual[j][i];
+                    }
+                }
+            
+            norm_residual = sqrt(1.0/((double)i_max*(double)j_max)*sum);
+            
+            
+            //print_solution("solution", grid, u);
+            
         }
-        norm_residual = sqrt(1.0/((double)i_max*(double)j_max)*sum);
-        
-        
-        //print_solution("solution", grid, u);
-        
     }
     printf("count: %d\n", count);
     printf("sor done ...\n");

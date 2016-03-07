@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <omp.h>
+#include <time.h>
+#include <sys/time.h>
 
 #define MAX_SWEEPS	1000000
 
@@ -35,8 +37,13 @@ void fillF(GRID *grid, double *f[]);
 
 
 
+
+
 int main(void)
 {
+    struct timeval start, end;
+    double diff;
+    
     GRID grid;
     double h, mu;
     /* for convergence of iterative methods, EPSILON = epsilon*h^2 */
@@ -83,8 +90,15 @@ int main(void)
     
     //fill(&grid, u);
     //    implement_BCs(&grid, u);
+    gettimeofday(&start, NULL);
     SOR(&grid, u,f);
-    print_solution("solution", &grid, u);
+    gettimeofday(&end, NULL);
+    
+    
+    diff = ((end.tv_sec * 1000000 + end.tv_usec)
+            - (start.tv_sec * 1000000 + start.tv_usec))/1000000.0;
+    printf("Time: %lf sec.\n", diff);
+    //print_solution("solution", &grid, u);
     
     
     
@@ -167,84 +181,79 @@ void SOR(GRID *grid, double *u[], double *f[])
     
     int count;
     
-#pragma omp parallel private(i,j,count)
+#pragma omp parallel
     {
         count = 0;
-
-        while(count < 10000 && norm_residual > EPSILON){
-            count++;
+        while(count < 50000 && norm_residual > EPSILON){
             //Step 1: enforce BC
-            #pragma omp single
-            implement_BCs(grid,u);
+#pragma omp single
+            {
+                count++;
+                implement_BCs(grid,u);
+            }
             //Step 2: compute new u
             
             //Red
-#pragma omp parallel for
-            for (i = 1; i < N-1; i+=2) {
-                for (j = 1; j < N-1; j+=2) {
-                    u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
-                    ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
-                     (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
-                }
+#pragma omp parallel for private(j)// schedule(dynamic)
+            for (i = 1; i < N-1; i++) {
+                if(i%2!=0)
+                    for (j = 1; j < N-1; j+=2) {
+                        u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
+                        ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
+                         (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
+                    }
+                else
+                    for (j = 2; j < N-1; j+=2) {
+                        u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
+                        ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
+                         (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
+                    }
             }
             
-#pragma omp parallel for
-            for (i = 2; i < N-1; i+=2) {
-                for (j = 2; j < N-1; j+=2) {
-                    u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
-                    ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
-                     (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
-                }
-            }
+            
+            
             //Black
-#pragma omp parallel for
-            for (i = 1; i < N-1; i+=2) {
-                for (j = 2; j < N-1; j+=2) {
-                    u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
-                    ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
-                     (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
-                }
+#pragma omp parallel for private(j)// schedule(dynamic)
+            for (i = 1; i < N-1; i++) {
+                if(i%2!=0)
+                    for (j = 2; j < N-1; j+=2) {
+                        u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
+                        ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
+                         (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
+                    }
+                else
+                    for (j = 1; j < N-1; j+=2) {
+                        u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
+                        ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
+                         (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
+                    }
             }
-            
-#pragma omp parallel for
-            for (i = 2; i < N-1; i+=2) {
-                for (j = 1; j < N-1; j+=2) {
-                    u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
-                    ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
-                     (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
-                }
-            }
-            
-            
-            
-            
-            
             
             
             //Step 3: enforce BC
-            #pragma omp single
+#pragma omp single
             implement_BCs(grid,u);
             //Step 4: compute the residual
-#pragma omp parallel for
-                for (i = 1; i < N-1; i++) {
-                    for (j = 1; j < N-1; j++) {
-                        residual[j][i] = f[j][i]-((u[j+1][i] - 2*u[j][i] + u[j-1][i])/(dx*dx)
-                                                  + (u[j][i+1] - 2*u[j][i] + u[j][i-1])/(dy*dy));
-                    }
-                }
-                
-                
-                //Step 5: compute it's L2norm
-                sum = 0.0;
-                for (i = 1; i < N-1; i++) {
-                    for (j = 1; j < N-1; j++) {
-                        sum += residual[j][i]*residual[j][i];
-                    }
-                }
             
+            sum = 0.0;
+#pragma omp parallel for reduction(+:sum)
+            for (i = 1; i < N-1; i++) {
+                for (j = 1; j < N-1; j++) {
+                    residual[j][i] = f[j][i]-((u[j+1][i] - 2*u[j][i] + u[j-1][i])/(dx*dx)
+                                              + (u[j][i+1] - 2*u[j][i] + u[j][i-1])/(dy*dy));
+                    sum = residual[j][i]*residual[j][i];
+                    
+                }
+            }
+            
+            
+            //Step 5: compute it's L2norm
+#pragma omp single
             norm_residual = sqrt(1.0/((double)i_max*(double)j_max)*sum);
             
             
+            
+            //printf("%d \n",count);
             //print_solution("solution", grid, u);
             
         }

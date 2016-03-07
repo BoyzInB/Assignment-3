@@ -115,9 +115,10 @@ void fillF(GRID *grid, double *f[]){
     double dx = grid->dx;
     double dy = grid->dy;
     int N = grid->N;
+    int i,j;
     
-    for (int i = 0; i<N; i++)
-        for(int j = 0;j<N;j++){
+    for (i = 0; i<N; i++)
+        for(j = 0;j<N;j++){
             f[i][j] = sin(2*PI*(i-0.5)*dx);
             // printf("x: %f\n",(i-0.5)*dx);
         }
@@ -186,7 +187,7 @@ void SOR(GRID *grid, double *u[], double *f[])
         count = 0;
         while(count < 50000 && norm_residual > EPSILON){
             //Step 1: enforce BC
-#pragma omp single
+#pragma omp single nowait
             {
                 count++;
                 implement_BCs(grid,u);
@@ -194,40 +195,26 @@ void SOR(GRID *grid, double *u[], double *f[])
             //Step 2: compute new u
             
             //Red
-#pragma omp for private(j)// schedule(dynamic)
-            for (i = 1; i < N-1; i++) {
-                if(i%2!=0)
-                    for (j = 1; j < N-1; j+=2) {
+#pragma omp for private(j)
+            for (i = 1; i < N-1; i++)
+                    for (j = 1 + (i%2!=0); j < N-1; j+=2)
                         u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
                         ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
                          (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
-                    }
-                else
-                    for (j = 2; j < N-1; j+=2) {
-                        u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
-                        ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
-                         (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
-                    }
-            }
+            
             
             
             
             //Black
-#pragma omp for private(j)// schedule(dynamic)
-            for (i = 1; i < N-1; i++) {
-                if(i%2!=0)
-                    for (j = 2; j < N-1; j+=2) {
+#pragma omp for private(j)
+            for (i = 1; i < N-1; i++)
+                    for (j = 1 + (i%2==0); j < N-1; j+=2)
                         u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
                         ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
                          (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
-                    }
-                else
-                    for (j = 1; j < N-1; j+=2) {
-                        u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
-                        ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
-                         (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
-                    }
-            }
+            
+                
+            
             
             
             //Step 3: enforce BC
@@ -236,7 +223,7 @@ void SOR(GRID *grid, double *u[], double *f[])
             //Step 4: compute the residual
             
             sum = 0.0;
-#pragma omp for reduction(+:sum)
+#pragma omp for reduction(+:sum) private(j)
             for (i = 1; i < N-1; i++) {
                 for (j = 1; j < N-1; j++) {
                     residual[j][i] = f[j][i]-((u[j+1][i] - 2*u[j][i] + u[j-1][i])/(dx*dx)
@@ -244,6 +231,7 @@ void SOR(GRID *grid, double *u[], double *f[])
                     sum = residual[j][i]*residual[j][i];
                     
                 }
+                //printf("id: %d", omp_thread_num)
             }
             
             

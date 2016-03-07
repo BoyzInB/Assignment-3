@@ -187,7 +187,7 @@ void SOR(GRID *grid, double *u[], double *f[])
         count = 0;
         while(count < 50000 && norm_residual > EPSILON){
             //Step 1: enforce BC
-#pragma omp single nowait
+#pragma omp single
             {
                 count++;
                 implement_BCs(grid,u);
@@ -201,10 +201,6 @@ void SOR(GRID *grid, double *u[], double *f[])
                         u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
                         ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
                          (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
-            
-            
-            
-            
             //Black
 #pragma omp for private(j)
             for (i = 1; i < N-1; i++)
@@ -212,10 +208,6 @@ void SOR(GRID *grid, double *u[], double *f[])
                         u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
                         ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
                          (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
-            
-                
-            
-            
             
             //Step 3: enforce BC
 #pragma omp single nowait
@@ -229,20 +221,11 @@ void SOR(GRID *grid, double *u[], double *f[])
                     residual[j][i] = f[j][i]-((u[j+1][i] - 2*u[j][i] + u[j-1][i])/(dx*dx)
                                               + (u[j][i+1] - 2*u[j][i] + u[j][i-1])/(dy*dy));
                     sum = residual[j][i]*residual[j][i];
-                    
                 }
-                //printf("id: %d", omp_thread_num)
             }
-            
-            
             //Step 5: compute it's L2norm
 #pragma omp single
             norm_residual = sqrt(1.0/((double)i_max*(double)j_max)*sum);
-            
-            
-            //printf("%d \n",count);
-            //print_solution("solution", grid, u);
-            
         }
     }
     printf("count: %d\n", count);

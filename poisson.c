@@ -33,12 +33,6 @@ void fillF(GRID *grid, double *f[]);
 
 
 
-POINTER alloc_matrix(int N_rows, int N_columns, unsigned element_size);
-POINTER alloc_vector(int N, unsigned element_size);
-POINTER Alloc(unsigned N_bytes);
-void zero_matrix(double *A[], int N_rows, int N_columns);
-void zero_vector(double v[], int N);
-
 int main(void)
 {
     GRID grid;
@@ -49,7 +43,6 @@ int main(void)
     char c[100];
     
     N = 10;
-    //printf("number of dx = %d\n", N);
     grid.N = N;
     int nTemp = N - (N%2 == 0);
     double a=1.,b=1.;
@@ -57,15 +50,12 @@ int main(void)
     grid.j_max = N - 2;
     grid.dx = a/grid.i_max;
     grid.dy = b/grid.j_max;
-    //grid.dx = (xmax-xmin)/nTemp;
-    //grid.dy = (ymax-ymin)/nTemp;
+
     h = grid.h = grid.dx;
     
     grid.EPSILON = 1e-13;
     
-    //printf("dx: %f, dy: %f\n",grid.dx, grid.dy);
-    /* calculate omega_opt for SOR */
-    //mu = cos(PI*h); /* Jacobi spectral radius */
+ 
     grid.omega = 1.7;
     printf("EPSILON = epsilon*h^2 = %g\n", grid.EPSILON);
     printf("\twhere epsilon = %g\n", epsilon);
@@ -103,21 +93,6 @@ int main(void)
     return 0;
 }
 
-/*
- void implement_BCs(GRID *grid, double *u[])
- {
- int N = grid->N, i, j;
- 
- for (j = 0; j <= N; j++) {
- u[j][0] = 0.;
- u[j][N] = 1.;
- }
- for (i = 1; i < N; i++) {
- u[0][i] = 0.;
- u[N][i] = 0.;
- }
- }
- */
 
 
 void fillF(GRID *grid, double *f[]){
@@ -140,13 +115,13 @@ void implement_BCs(GRID *grid, double *u[])
 {
     int N = grid->N, i, j;
     
+    for (i = 1; i < N-1 ; i++) {
+        u[0][i] = u[1][i];
+        u[N-1][i] = u[N-2][i];
+    }
     for (j = 1; j < N-1; j++) {
         u[j][0] = u[j][1];
         u[j][N-1] = u[j][N-2];
-    }
-    for (i = 1; i < N-1; i++) {
-        u[0][i] = u[1][i];
-        u[N-1][i] = u[N-2][i];
     }
     u[0][0] = u[1][1];u[N-1][0]=u[N-2][1];
     u[0][N-1] = u[1][N-2];u[N-1][N-1]=u[N-2][N-2];

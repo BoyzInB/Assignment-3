@@ -52,12 +52,12 @@ int main(void)
     grid.j_max = N - 2;
     grid.dx = a/grid.i_max;
     grid.dy = b/grid.j_max;
-
+    
     h = grid.h = grid.dx;
     
     grid.EPSILON = 1e-13;
     
- 
+    
     grid.omega = 1.7;
     printf("EPSILON = epsilon*h^2 = %g\n", grid.EPSILON);
     printf("\twhere epsilon = %g\n", epsilon);
@@ -171,11 +171,38 @@ void SOR(GRID *grid, double *u[], double *f[])
     while(count < 10000 && norm_residual > EPSILON){
         count++;
         //Step 1: enforce BC
-        //implement_BCs(grid,u);
+        implement_BCs(grid,u);
         //Step 2: compute new u
         
         //Red
         for (i = 1; i < N-1; i+=2) {
+            for (j = 1; j < N-1; j+=2) {
+                u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
+                ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
+                 (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
+            }
+        }
+        
+        
+        for (i = 2; i < N-1; i+=2) {
+            for (j = 2; j < N-1; j+=2) {
+                u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
+                ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
+                 (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
+            }
+        }
+        
+        //Black
+        for (i = 1; i < N-1; i+=2) {
+            for (j = 2; j < N-1; j+=2) {
+                u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
+                ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
+                 (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
+            }
+        }
+        
+        
+        for (i = 2; i < N-1; i+=2) {
             for (j = 1; j < N-1; j+=2) {
                 u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
                 ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
@@ -189,9 +216,8 @@ void SOR(GRID *grid, double *u[], double *f[])
         
         
         
-        
         //Step 3: enforce BC
-        //implement_BCs(grid,u);
+        implement_BCs(grid,u);
         //Step 4: compute the residual
         {
             for (i = 1; i < N-1; i++) {

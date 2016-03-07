@@ -51,7 +51,7 @@ int main(void)
     int N,i;
     char c[100];
     
-    N = 10;
+    N = 100;
     grid.N = N;
     int nTemp = N - (N%2 == 0);
     double a=1.,b=1.;
@@ -194,7 +194,7 @@ void SOR(GRID *grid, double *u[], double *f[])
             //Step 2: compute new u
             
             //Red
-#pragma omp parallel for private(j)// schedule(dynamic)
+#pragma omp for private(j)// schedule(dynamic)
             for (i = 1; i < N-1; i++) {
                 if(i%2!=0)
                     for (j = 1; j < N-1; j+=2) {
@@ -213,7 +213,7 @@ void SOR(GRID *grid, double *u[], double *f[])
             
             
             //Black
-#pragma omp parallel for private(j)// schedule(dynamic)
+#pragma omp for private(j)// schedule(dynamic)
             for (i = 1; i < N-1; i++) {
                 if(i%2!=0)
                     for (j = 2; j < N-1; j+=2) {
@@ -231,12 +231,12 @@ void SOR(GRID *grid, double *u[], double *f[])
             
             
             //Step 3: enforce BC
-#pragma omp single
+#pragma omp single nowait
             implement_BCs(grid,u);
             //Step 4: compute the residual
             
             sum = 0.0;
-#pragma omp parallel for reduction(+:sum)
+#pragma omp for reduction(+:sum)
             for (i = 1; i < N-1; i++) {
                 for (j = 1; j < N-1; j++) {
                     residual[j][i] = f[j][i]-((u[j+1][i] - 2*u[j][i] + u[j-1][i])/(dx*dx)
@@ -250,7 +250,6 @@ void SOR(GRID *grid, double *u[], double *f[])
             //Step 5: compute it's L2norm
 #pragma omp single
             norm_residual = sqrt(1.0/((double)i_max*(double)j_max)*sum);
-            
             
             
             //printf("%d \n",count);

@@ -171,12 +171,12 @@ void SOR(GRID *grid, double *u[], double *f[])
     while(count < 10000 && norm_residual > EPSILON){
         count++;
         //Step 1: enforce BC
-        implement_BCs(grid,u);
+        //implement_BCs(grid,u);
         //Step 2: compute new u
         
-        
-        for (i = 1; i < N-1; i++) {
-            for (j = 1; j < N-1; j++) {
+        //Red
+        for (i = 1; i < N-1; i+=2) {
+            for (j = 1; j < N-1; j+=2) {
                 u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
                 ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
                  (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
@@ -186,8 +186,12 @@ void SOR(GRID *grid, double *u[], double *f[])
         
         
         
+        
+        
+        
+        
         //Step 3: enforce BC
-        implement_BCs(grid,u);
+        //implement_BCs(grid,u);
         //Step 4: compute the residual
         {
             for (i = 1; i < N-1; i++) {

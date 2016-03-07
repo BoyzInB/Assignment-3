@@ -182,16 +182,15 @@ void SOR(GRID *grid, double *u[], double *f[])
     
     int count;
     
+    //Step 1: enforce BC
+    implement_BCs(grid,u);
+
 #pragma omp parallel
     {
         count = 0;
         while(count < 50000 && norm_residual > EPSILON){
-            //Step 1: enforce BC
 #pragma omp single
-            {
-                count++;
-                implement_BCs(grid,u);
-            }
+            count++;
             //Step 2: compute new u
             
             //Red

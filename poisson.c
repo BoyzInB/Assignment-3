@@ -175,7 +175,7 @@ void SOR(GRID *grid, double *u[], double *f[])
     {
         residual[i] = &arr3[i * (N)];
     }
-    
+    double rel;
     
     int count;
     
@@ -256,11 +256,12 @@ void SOR(GRID *grid, double *u[], double *f[])
             
             norm_residual = sqrt(1.0/((double)i_max*(double)j_max)*sum);
             
-            
+            rel = norm_residual/EPSILON;
             //print_solution("solution", grid, u);
             
         }
     }
+    printf("Res/Eps: %f\n",rel);
     printf("count: %d\n", count);
     printf("sor done ...\n");
     

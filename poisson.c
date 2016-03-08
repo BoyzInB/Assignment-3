@@ -50,15 +50,15 @@ int main(void)
     /* for convergence of iterative methods, EPSILON = epsilon*h^2 */
     double epsilon = 1.e-5;
     int N,j;
-    int Nx = 8, Ny = 10;
+    int Nx = 10, Ny = 10;
     
     N = 10;
     grid.Nx = Nx;
     grid.Ny = Ny;
     grid.N = N;
-    int nTemp = N - (N%2 == 0);
+    /*int nTemp = N - (N%2 == 0);
     int nxTemp = Nx - (Nx%2 == 0);
-    int nyTemp = Ny - (Ny%2 == 0);
+    int nyTemp = Ny - (Ny%2 == 0);*/
     double a=1.,b=1.;
     grid.i_max = Nx - 2;
     grid.j_max = Ny - 2;
@@ -79,13 +79,7 @@ int main(void)
     /* allocate memory for array u */
     double **u = calloc(Nx,sizeof(*u));
     double **f = calloc(Nx,sizeof(*f));
-    //double *arr1 = calloc(N, sizeof(*arr1));
-    //double *arr2 = calloc(N, sizeof(*arr2));
-    
-
-    
   
-    
     
     for (j = 0; j < Nx; ++j)
     {
@@ -93,35 +87,14 @@ int main(void)
         f[j] = calloc(Ny, sizeof(double));
     }
     
-    /*double **u = calloc((N),sizeof(*u));
-    double *arr1 = calloc((N)*(N), sizeof*arr1);
-    double **f = calloc((N),sizeof(*f));
-    double *arr2 = calloc((N)*(N), sizeof*arr2);
-    
-    */
-    /*
-    for (j = 0; j < N; ++j)
-    {
-        u[j] = &arr1[N];
-        f[j] = &arr2[N];
-    }*/
-    
-    
-    
-    
-
-    
     fillF(&grid,f);
     
-    //print_solution(&grid,f);
     
-    
-    //fill(&grid, u);
-    //    implement_BCs(&grid, u);
-    gettimeofday(&start, NULL);
+    gettimeofday(&start, NULL);// For timing
     
 
-    SOR(&grid, u,f);
+    SOR(&grid, u,f); // Solution.
+    
     gettimeofday(&end, NULL);
     
     
@@ -133,11 +106,10 @@ int main(void)
     
     
     
-    //free(arr1);
-    //free(arr2);
-    for (int i = 0; i < Ny; i++){
-        //free( f[i] );
-        //free( u[i] );
+    /* Free memory */
+    for (int i = 0; i < Nx; i++){
+        free( f[i] );
+        free( u[i] );
     }
     free(f);
     free(u);
@@ -241,8 +213,6 @@ void SOR(GRID *grid, double *u[], double *f[])
 
     }
     
-
-  
     int count;
     
     //Step 1: enforce BC

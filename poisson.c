@@ -129,7 +129,7 @@ int main(void)
             - (start.tv_sec * 1000000 + start.tv_usec))/1000000.0;
     printf("Time: %lf sec.\n", diff);
     
-    //print_solution(&grid, u);
+    print_solution(&grid, u);
     
     
     
@@ -229,16 +229,16 @@ void SOR(GRID *grid, double *u[], double *f[])
 
     
 
-    double **residual = calloc(Ny,sizeof(*residual));
-    double *arr3 = calloc(Nx, sizeof(*arr3));
+    double **residual = calloc(Nx,sizeof(*residual));
     
     printf("hai");
 
     
 
-    for (i = 0; i < Ny; ++i)
+    for (i = 0; i < Nx; ++i)
     {
-        residual[i] = &arr3[Nx];
+        residual[i] = calloc(Ny, sizeof(double));
+
     }
     
 
@@ -264,16 +264,16 @@ void SOR(GRID *grid, double *u[], double *f[])
             //Red
 
 #pragma omp for private(j)
-            for (i = 1; i < Nx-1; i++)
-                for (j = 1 + (i%2!=0); j < Ny-1; j+=2)
+            for (i = 1; i < Ny-1; i++)
+                for (j = 1 + (i%2!=0); j < Nx-1; j+=2)
                     u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
                     ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
                      (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
          
             //Black
 #pragma omp for private(j)
-            for (i = 1; i < Nx-1; i++)
-                    for (j = 1 + (i%2==0); j < Ny-1; j+=2)
+            for (i = 1; i < Ny-1; i++)
+                    for (j = 1 + (i%2==0); j < Nx-1; j+=2)
                         u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
                         ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
                          (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
@@ -282,11 +282,11 @@ void SOR(GRID *grid, double *u[], double *f[])
 #pragma omp single nowait
             implement_BCs(grid,u);
             //Step 4: compute the residual
-            
+ 
             sum = 0.0;
 #pragma omp for reduction(+:sum) private(j)
-            for (i = 1; i < Nx-1; i++) {
-                for (j = 1; j < Ny-1; j++) {
+            for (i = 1; i < Ny-1; i++) {
+                for (j = 1; j < Nx-1; j++) {
                     residual[j][i] = f[j][i]-((u[j+1][i] - 2*u[j][i] + u[j-1][i])/(dx*dx)
                                               + (u[j][i+1] - 2*u[j][i] + u[j][i-1])/(dy*dy));
                     sum = residual[j][i]*residual[j][i];
@@ -301,6 +301,6 @@ void SOR(GRID *grid, double *u[], double *f[])
 
     printf("count: %d\n", count);
     printf("sor done ...\n");
-    
+   
     
 }

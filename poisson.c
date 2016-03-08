@@ -39,11 +39,18 @@ void fillF(GRID *grid, double *f[]);
 
 
 
-int main(void)
+int main(int argc, char *argv[])
 {
+    int numthr;
     struct timeval start, end;
     double diff;
+    if (argc!=2){
+        printf("Use ./poiss n (#threads)\n");
+        return 0;
+    }
     
+    numthr = atoi(argv[1]);
+    omp_set_num_threads(numthr);
     GRID grid;
     double h, mu;
     /* for convergence of iterative methods, EPSILON = epsilon*h^2 */
@@ -51,7 +58,8 @@ int main(void)
     int N,i;
     char c[100];
     
-    N = 100;
+    N = 200;
+    printf("Size: %d\n", N);
     grid.N = N;
     int nTemp = N - (N%2 == 0);
     double a=1.,b=1.;

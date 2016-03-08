@@ -50,7 +50,7 @@ int main(void)
     /* for convergence of iterative methods, EPSILON = epsilon*h^2 */
     double epsilon = 1.e-5;
     int N,j;
-    int Nx = 12, Ny = 10;
+    int Nx = 10, Ny = 10;
     
     N = 10;
     grid.Nx = Nx;
@@ -178,7 +178,7 @@ void print_solution(GRID *grid, double *u[])
     // x, y, u
     for (i = 0; i < Nx; i++) {
         for (j = 0; j < Ny  ; j++) {
-            printf("%.5f ", u[i][j]);
+            printf("%.5f ", u[j][i]);
         }
         printf("\n");
     }
@@ -197,8 +197,8 @@ void fillF(GRID *grid, double *f[]){
     //printf("\nNx %d, Ny %d, dx %f, dy %f\n",Nx,Ny,dx,dy);
     for (i = 0; i<Nx; i++)
         for(j = 0;j<Ny;j++){
-            f[j][i] = sin(2*PI*(i-0.5)*dx);
-            //printf("x: %f, f: %f\n",(i-0.5)*dx,f[j][i]);
+            f[i][j] = sin(2*PI*(i-0.5)*dx);
+            printf("x: %f, f: %f\n",(i-0.5)*dx,f[j][i]);
             //printf("x: %f\n",(j-0.5)*dx);
             
         }

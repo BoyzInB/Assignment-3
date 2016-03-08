@@ -32,7 +32,7 @@ typedef struct {
 typedef void	*POINTER;
 
 void implement_BCs(GRID *grid, double *u[]);
-void print_solution(char *string, GRID *grid, double *u[]);
+void print_solution(GRID *grid, double *u[]);
 void SOR(GRID *grid, double *u[], double *f[]);
 void fillF(GRID *grid, double *f[]);
 
@@ -75,22 +75,26 @@ int main(void)
     printf("\twhere epsilon = %g\n", epsilon);
     printf("SOR omega_opt = %g\n", grid.omega);
     
-    printf("hej\n");
+    printf("hej 1\n");
 
     /* allocate memory for array u */
-    double **u = calloc(Ny,sizeof(*u));
-    double *arr1[Ny] = calloc(Nx, sizeof*arr1);
-    double **f = calloc(Ny,sizeof(*f));
-    double *arr2 = calloc(Nx, sizeof*arr2);
+    double **u = calloc(Nx,sizeof(*u));
+    //double *arr1 = calloc(Ny, sizeof(*arr1));
+    double **f = calloc(Nx,sizeof(*f));
+    //double *arr2 = calloc(Ny, sizeof(*arr2));
     
-    printf("\thej\n");
+    printf("\thej 2\n");
 
-    for (i = 0; i < (Nx); ++i)
+    
+  
+    
+    
+    for (i = 0; i < Nx; ++i)
     {
-        u[i] = &arr1[i * (N)];
-        f[i] = &arr2[i * (Ny)];
+        u[i] = calloc(Ny, sizeof(double));
+        f[i] = calloc(Ny, sizeof(double));
     }
-    printf("\t\thej\n");
+    printf("\t\thej 3\n");
 
     
     //fillF(&grid,f);
@@ -101,19 +105,20 @@ int main(void)
     //fill(&grid, u);
     //    implement_BCs(&grid, u);
     gettimeofday(&start, NULL);
-    SOR(&grid, u,f);
+    //SOR(&grid, u,f);
     gettimeofday(&end, NULL);
     
     
     diff = ((end.tv_sec * 1000000 + end.tv_usec)
             - (start.tv_sec * 1000000 + start.tv_usec))/1000000.0;
     printf("Time: %lf sec.\n", diff);
-    //print_solution("solution", &grid, u);
+    
+    print_solution(&grid, u);
     
     
     
-    free(arr1);
-    free(arr2);
+    //free(arr1);
+    //free(arr2);
     free(u);
     free(f);
     return 0;
@@ -167,7 +172,7 @@ void implement_BCs(GRID *grid, double *u[])
      }
 
 
-void print_solution(char *string, GRID *grid, double *u[])
+void print_solution(GRID *grid, double *u[])
 {
     int N = grid->N, i, j;
     int Nx = grid->Nx;
@@ -176,8 +181,8 @@ void print_solution(char *string, GRID *grid, double *u[])
     double x, y;
     
     // x, y, u
-    for (i = 0; i < Nx; i++) {
-        for (j = 0; j < Ny ; j++) {
+    for (i = 0; i < 2; i++) {
+        for (j = 0; j < 2 ; j++) {
             printf("%.5f ", u[j][i]);
         }
         printf("\n");

@@ -1,6 +1,6 @@
 CC=gcc
 LIBS=-lm
-FLAGS= -fopenmp 
+FLAGS= 
 
 poiss: poisson.c
 	$(CC) $(FLAGS) -o poiss poisson.c

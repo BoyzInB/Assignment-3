@@ -50,7 +50,7 @@ int main(void)
     /* for convergence of iterative methods, EPSILON = epsilon*h^2 */
     double epsilon = 1.e-5;
     int N,j;
-    int Nx = 10, Ny = 10;
+    int Nx = 8, Ny = 10;
     
     N = 10;
     grid.Nx = Nx;
@@ -77,8 +77,8 @@ int main(void)
     
 
     /* allocate memory for array u */
-    double **u = calloc(Ny,sizeof(*u));
-    double **f = calloc(Ny,sizeof(*f));
+    double **u = calloc(Nx,sizeof(*u));
+    double **f = calloc(Nx,sizeof(*f));
     //double *arr1 = calloc(N, sizeof(*arr1));
     //double *arr2 = calloc(N, sizeof(*arr2));
     
@@ -87,10 +87,10 @@ int main(void)
   
     
     
-    for (j = 0; j < Ny; ++j)
+    for (j = 0; j < Nx; ++j)
     {
-        u[j] = calloc(Nx, sizeof(double));
-        f[j] = calloc(Nx, sizeof(double));
+        u[j] = calloc(Ny, sizeof(double));
+        f[j] = calloc(Ny, sizeof(double));
     }
     
     /*double **u = calloc((N),sizeof(*u));
@@ -111,7 +111,7 @@ int main(void)
     
 
     
-    //fillF(&grid,f);
+    fillF(&grid,f);
     
     print_solution(&grid,f);
     
@@ -180,10 +180,11 @@ void print_solution(GRID *grid, double *u[])
     int Ny = grid->Ny;
 
     double x, y;
-    
+    printf("\nNx %d, Ny %d\n",Nx,Ny);
+
     // x, y, u
-    for (i = 0; i < Nx; i++) {
-        for (j = 0; j < Ny  ; j++) {
+    for (i = 0; i < Ny; i++) {
+        for (j = 0; j < Nx  ; j++) {
             printf("%.5f ", u[j][i]);
         }
         printf("\n");
@@ -200,16 +201,13 @@ void fillF(GRID *grid, double *f[]){
     
     int i,j;
     
-    //printf("\nNx %d, Ny %d, dx %f, dy %f\n",Nx,Ny,dx,dy);
-    for (i = 0; i<Nx; i++)
-        for(j = 0;j<Ny;j++){
-            f[j][i] = sin(2*PI*(i-0.5)*dx);
-            printf("x: %f, f: %f\n",(i-0.5)*dx,f[j][i]);
+    for (i = 0; i<Ny; i++)
+        for(j = 0;j<Nx;j++){
+            f[j][i] = sin(2*PI*(j-0.5)*dx);
+            //printf("x: %f, f: %f\n",(i-0.5)*dx,f[j][i]);
             //printf("x: %f\n",(j-0.5)*dx);
             
         }
-    
-    
 }
 
 void SOR(GRID *grid, double *u[], double *f[])

@@ -79,19 +79,19 @@ int main(void)
     /* allocate memory for array u */
     double **u = calloc(Ny,sizeof(*u));
     double **f = calloc(Ny,sizeof(*f));
-    double *arr1 = calloc(Nx, sizeof(*arr1));
-    double *arr2 = calloc(Nx, sizeof(*arr2));
+    //double *arr1 = calloc(N, sizeof(*arr1));
+    //double *arr2 = calloc(N, sizeof(*arr2));
     
 
     
   
     
     
-    /*for (i = 0; i < Ny; ++i)
+    for (j = 0; j < Ny; ++j)
     {
-        u[i] = calloc(Nx, sizeof(double));
-        f[i] = calloc(Nx, sizeof(double));
-    }*/
+        u[j] = calloc(Nx, sizeof(double));
+        f[j] = calloc(Nx, sizeof(double));
+    }
     
     /*double **u = calloc((N),sizeof(*u));
     double *arr1 = calloc((N)*(N), sizeof*arr1);
@@ -99,18 +99,19 @@ int main(void)
     double *arr2 = calloc((N)*(N), sizeof*arr2);
     
     */
-    for (j = 0; j < Ny; ++j)
+    /*
+    for (j = 0; j < N; ++j)
     {
-        u[j] = &arr1[Nx];
-        f[j] = &arr2[Nx];
-    }
+        u[j] = &arr1[N];
+        f[j] = &arr2[N];
+    }*/
     
     
     
     
 
     
-    fillF(&grid,f);
+    //fillF(&grid,f);
     
     print_solution(&grid,f);
     
@@ -132,10 +133,15 @@ int main(void)
     
     
     
-    free(arr1);
-    free(arr2);
-    free(u);
+    //free(arr1);
+    //free(arr2);
+    for (int i = 0; i < Ny; i++)
+        free( f[i] );
     free(f);
+    
+    
+    free(u);
+    //free(f);
     return 0;
 }
 
@@ -197,7 +203,7 @@ void fillF(GRID *grid, double *f[]){
     //printf("\nNx %d, Ny %d, dx %f, dy %f\n",Nx,Ny,dx,dy);
     for (i = 0; i<Nx; i++)
         for(j = 0;j<Ny;j++){
-            f[i][j] = sin(2*PI*(i-0.5)*dx);
+            f[j][i] = sin(2*PI*(i-0.5)*dx);
             printf("x: %f, f: %f\n",(i-0.5)*dx,f[j][i]);
             //printf("x: %f\n",(j-0.5)*dx);
             

@@ -49,12 +49,12 @@ int main(void)
     double h, mu;
     /* for convergence of iterative methods, EPSILON = epsilon*h^2 */
     double epsilon = 1.e-5;
-    int N,i;
-    int Nx, Ny;
+    int N,j;
+    int Nx = 12, Ny = 10;
     
     N = 10;
-    grid.Nx = 10;
-    grid.Ny = 10;
+    grid.Nx = Nx;
+    grid.Ny = Ny;
     grid.N = N;
     int nTemp = N - (N%2 == 0);
     int nxTemp = Nx - (Nx%2 == 0);
@@ -75,36 +75,51 @@ int main(void)
     printf("\twhere epsilon = %g\n", epsilon);
     printf("SOR omega_opt = %g\n", grid.omega);
     
-    printf("hej 1\n");
 
     /* allocate memory for array u */
-    double **u = calloc(Nx,sizeof(*u));
-    //double *arr1 = calloc(Ny, sizeof(*arr1));
-    double **f = calloc(Nx,sizeof(*f));
-    //double *arr2 = calloc(Ny, sizeof(*arr2));
+    double **u = calloc(Ny,sizeof(*u));
+    double **f = calloc(Ny,sizeof(*f));
+    double *arr1 = calloc(Nx, sizeof(*arr1));
+    double *arr2 = calloc(Nx, sizeof(*arr2));
     
-    printf("\thej 2\n");
 
     
   
     
     
-    for (i = 0; i < Nx; ++i)
+    /*for (i = 0; i < Ny; ++i)
     {
-        u[i] = calloc(Ny, sizeof(double));
-        f[i] = calloc(Ny, sizeof(double));
+        u[i] = calloc(Nx, sizeof(double));
+        f[i] = calloc(Nx, sizeof(double));
+    }*/
+    
+    /*double **u = calloc((N),sizeof(*u));
+    double *arr1 = calloc((N)*(N), sizeof*arr1);
+    double **f = calloc((N),sizeof(*f));
+    double *arr2 = calloc((N)*(N), sizeof*arr2);
+    
+    */
+    for (j = 0; j < Ny; ++j)
+    {
+        u[j] = &arr1[Nx];
+        f[j] = &arr2[Nx];
     }
-    printf("\t\thej 3\n");
+    
+    
+    
+    
 
     
-    //fillF(&grid,f);
+    fillF(&grid,f);
     
-    //print_solution("f",&grid,f);
+    print_solution(&grid,f);
     
     
     //fill(&grid, u);
-    //    implement_BCs(&grid, u);
+      //  implement_BCs(&grid, u);
     gettimeofday(&start, NULL);
+    
+
     //SOR(&grid, u,f);
     gettimeofday(&end, NULL);
     
@@ -113,35 +128,17 @@ int main(void)
             - (start.tv_sec * 1000000 + start.tv_usec))/1000000.0;
     printf("Time: %lf sec.\n", diff);
     
-    print_solution(&grid, u);
+    //print_solution(&grid, u);
     
     
     
-    //free(arr1);
-    //free(arr2);
+    free(arr1);
+    free(arr2);
     free(u);
     free(f);
     return 0;
 }
 
-
-
-void fillF(GRID *grid, double *f[]){
-    double dx = grid->dx;
-    double dy = grid->dy;
-    int N = grid->N;
-    int Nx = grid->Nx;
-    int Ny = grid->Ny;
-
-    int i,j;
-    
-    for (i = 0; i<Nx; i++)
-        for(j = 0;j<Ny;j++){
-            f[i][j] = sin(2*PI*(i-0.5)*dx);
-            // printf("x: %f\n",(i-0.5)*dx);
-        }
-    
-}
 
 
 
@@ -153,14 +150,12 @@ void implement_BCs(GRID *grid, double *u[])
     int Ny = grid->Ny;
 
 
-    printf("hej 1\n");
 
     for (i = 1; i < Nx-1 ; i++) {
         u[0][i] = u[1][i];
 
         u[Ny-1][i] = u[Ny-2][i];
     }
-    printf("\thej 2\n");
 
     for (j = 1; j < Ny-1; j++) {
         u[j][0] = u[j][1];
@@ -181,12 +176,33 @@ void print_solution(GRID *grid, double *u[])
     double x, y;
     
     // x, y, u
-    for (i = 0; i < 2; i++) {
-        for (j = 0; j < 2 ; j++) {
-            printf("%.5f ", u[j][i]);
+    for (i = 0; i < Nx; i++) {
+        for (j = 0; j < Ny  ; j++) {
+            printf("%.5f ", u[i][j]);
         }
         printf("\n");
     }
+    
+}
+
+void fillF(GRID *grid, double *f[]){
+    double dx = grid->dx;
+    double dy = grid->dy;
+    int N = grid->N;
+    int Nx = grid->Nx;
+    int Ny = grid->Ny;
+    
+    int i,j;
+    
+    //printf("\nNx %d, Ny %d, dx %f, dy %f\n",Nx,Ny,dx,dy);
+    for (i = 0; i<Nx; i++)
+        for(j = 0;j<Ny;j++){
+            f[j][i] = sin(2*PI*(i-0.5)*dx);
+            //printf("x: %f, f: %f\n",(i-0.5)*dx,f[j][i]);
+            //printf("x: %f\n",(j-0.5)*dx);
+            
+        }
+    
     
 }
 
@@ -206,32 +222,32 @@ void SOR(GRID *grid, double *u[], double *f[])
     double sum, temp, norm_residual0, norm_residual = 1.;
     
     
-    printf("hej 1 \n");
+    printf("hai");
 
     
 
     double **residual = calloc(Ny,sizeof(*residual));
-    double *arr3 = calloc(Nx, sizeof*arr3);
+    double *arr3 = calloc(Nx, sizeof(*arr3));
     
-    printf("\thej 2\n");
+    printf("hai");
 
     
 
     for (i = 0; i < Ny; ++i)
     {
-        residual[i] = &arr3[i * (Nx)];
+        residual[i] = &arr3[Nx];
     }
     
-    printf("\t\thej 3 \n");
 
   
     int count;
     
     //Step 1: enforce BC
-    printf("\t\t\thej 4 \n");
+    printf("hai");
 
     implement_BCs(grid,u);
-    printf("\t\t\t\thej 5 \n");
+
+    printf("hai");
 
 #pragma omp parallel
     {
@@ -245,18 +261,12 @@ void SOR(GRID *grid, double *u[], double *f[])
             //Red
 
 #pragma omp for private(j)
-            for (i = 1; i < Nx-1; i++){
-                for (j = 1 + (i%2!=0); j < Ny-1; j+=2){
-
-                    u[j][i] =(1-omega)*u[j][i];
-
-                    u[j][i] += omega/(2/(dx*dx)+2/(dy*dy));
-
-                    u[i][j] *= ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
-                         (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
-                }
-            }
-            
+            for (i = 1; i < Nx-1; i++)
+                for (j = 1 + (i%2!=0); j < Ny-1; j+=2)
+                    u[j][i] =(1-omega)*u[j][i] + omega/(2/(dx*dx)+2/(dy*dy))*
+                    ( (u[j+1][i]+u[j-1][i])/(dx*dx)+
+                     (u[j][i+1]+u[j][i-1])/(dy*dy) -f[j][i]);
+         
             //Black
 #pragma omp for private(j)
             for (i = 1; i < Nx-1; i++)

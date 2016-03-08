@@ -113,15 +113,15 @@ int main(void)
     
     fillF(&grid,f);
     
-    print_solution(&grid,f);
+    //print_solution(&grid,f);
     
     
     //fill(&grid, u);
-      //  implement_BCs(&grid, u);
+    //    implement_BCs(&grid, u);
     gettimeofday(&start, NULL);
     
 
-    //SOR(&grid, u,f);
+    SOR(&grid, u,f);
     gettimeofday(&end, NULL);
     
     
@@ -135,13 +135,12 @@ int main(void)
     
     //free(arr1);
     //free(arr2);
-    for (int i = 0; i < Ny; i++)
-        free( f[i] );
+    for (int i = 0; i < Ny; i++){
+        //free( f[i] );
+        //free( u[i] );
+    }
     free(f);
-    
-    
     free(u);
-    //free(f);
     return 0;
 }
 
@@ -157,18 +156,18 @@ void implement_BCs(GRID *grid, double *u[])
 
 
 
-    for (i = 1; i < Nx-1 ; i++) {
+    for (i = 1; i < Ny-1 ; i++) {
         u[0][i] = u[1][i];
 
-        u[Ny-1][i] = u[Ny-2][i];
+        u[Nx-1][i] = u[Nx-2][i];
     }
 
-    for (j = 1; j < Ny-1; j++) {
+    for (j = 1; j < Nx-1; j++) {
         u[j][0] = u[j][1];
-        u[j][Nx-1] = u[j][Nx-2];
+        u[j][Ny-1] = u[j][Ny-2];
     }
-    u[0][0] = u[1][1];u[Ny-1][0]=u[Ny-2][1];
-    u[0][Nx-1] = u[1][Nx-2];u[Ny-1][Nx-1]=u[Ny-2][Nx-2];
+    u[0][0] = u[1][1];u[Nx-1][0]=u[Nx-2][1];
+    u[0][Ny-1] = u[1][Ny-2];u[Nx-1][Ny-1]=u[Nx-2][Ny-2];
 
      }
 

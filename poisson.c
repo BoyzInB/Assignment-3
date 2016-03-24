@@ -91,7 +91,7 @@ int main(void)
     }*/
     
     
-    
+
     for (j = 0; j < Nx; ++j)
     {
         u[j] = &arrU[j*Ny];
@@ -209,20 +209,15 @@ void SOR(GRID *grid, double *u[], double *f[])
     double omega = grid->omega;
     double sum, temp, norm_residual0, norm_residual = 1.;
     
-    
-    printf("hai");
-
-    
-
     double **residual = calloc(Nx,sizeof(*residual));
     
-    printf("hai");
 
+    double *arrR = calloc(Nx*Ny, sizeof*arrR);
     
 
     for (i = 0; i < Nx; ++i)
     {
-        residual[i] = calloc(Ny, sizeof(double));
+        residual[i] = &arrR[i*Ny];
 
     }
     
@@ -284,6 +279,9 @@ void SOR(GRID *grid, double *u[], double *f[])
 
     printf("count: %d\n", count);
     printf("sor done ...\n");
+    
+    free(arrR);
+    free(residual);
    
     
 }

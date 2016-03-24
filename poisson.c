@@ -50,7 +50,7 @@ int main(void)
     /* for convergence of iterative methods, EPSILON = epsilon*h^2 */
     double epsilon = 1.e-5;
     int N,j;
-    int Nx = 10, Ny = 10;
+    int Nx = 12, Ny = 12;
     
     N = 10;
     grid.Nx = Nx;
@@ -79,12 +79,23 @@ int main(void)
     /* allocate memory for array u */
     double **u = calloc(Nx,sizeof(*u));
     double **f = calloc(Nx,sizeof(*f));
-  
+    double *arrU = calloc(Nx*Ny, sizeof*arrU);
+    double *arrF = calloc(Nx*Ny, sizeof*arrF);
+    
+    /*
+    double *arr = calloc((N+1)*(N+1), sizeof*arr);
+    
+    for (i = 0; i < (N+1); ++i)
+    {
+        u[i] = &arr[i * (N+1)];
+    }*/
+    
+    
     
     for (j = 0; j < Nx; ++j)
     {
-        u[j] = calloc(Ny, sizeof(double));
-        f[j] = calloc(Ny, sizeof(double));
+        u[j] = &arrU[j*Ny];
+        f[j] = &arrF[j*Ny];
     }
     
     fillF(&grid,f);
@@ -107,10 +118,12 @@ int main(void)
     
     
     /* Free memory */
-    for (int i = 0; i < Nx; i++){
+    /*for (int i = 0; i < Nx; i++){
         free( f[i] );
         free( u[i] );
-    }
+    }*/
+    free(arrU);
+    free(arrF);
     free(f);
     free(u);
     return 0;
